@@ -114,6 +114,7 @@ Datum pg_sphinx_select(PG_FUNCTION_ARGS)
   FuncCallContext *funcctx;
   sphinx_context ctx;
   int id, weight;
+  ArrayType *attr;
   char *error = NULL;
 
   if (SRF_IS_FIRSTCALL())
@@ -166,14 +167,15 @@ Datum pg_sphinx_select(PG_FUNCTION_ARGS)
   funcctx = SRF_PERCALL_SETUP();
   ctx = funcctx->user_fctx;
 
-  if (sphinx_context_next(ctx, &id, &weight))
+  if (sphinx_context_next(ctx, &id, &weight, &attr))
     {
       Datum result;
-      Datum values[2];
-      char nulls[2] = {0, 0};
+      Datum values[3];
+      char nulls[3] = {0, 0, 0};
 
       values[0] = Int32GetDatum(id);
       values[1] = Int32GetDatum(weight);
+      values[2] = GetDatum(attr);
 
       result = HeapTupleGetDatum(heap_form_tuple(funcctx->tuple_desc, values, nulls));
 
